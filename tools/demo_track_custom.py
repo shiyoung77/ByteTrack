@@ -75,7 +75,8 @@ def detic_demo(args):
     detic_output_folder = os.path.join(video_path, 'detic_output', args.detic_exp, 'instances')
     color_im_files = sorted(os.listdir(color_im_folder))
     color_im_paths = [os.path.join(color_im_folder, im_file) for im_file in color_im_files]
-    instance_paths = [os.path.join(detic_output_folder, im_file.replace('png', 'pkl')) for im_file in color_im_files]
+    instance_paths = [os.path.join(detic_output_folder, f"{os.path.splitext(im_file)[0]}.pkl")
+                      for im_file in color_im_files]
     output_folder = os.path.join(video_path, 'detic_output', args.detic_exp, 'byte_output')
 
     timer = Timer()
@@ -121,10 +122,9 @@ def detic_demo(args):
             online_im = img_info['raw_img']
 
         # result_image = predictor.visual(outputs[0], img_info, predictor.confthre)
-        if args.save_result:
-            save_folder = osp.join(output_folder, 'vis')
-            os.makedirs(save_folder, exist_ok=True)
-            cv2.imwrite(osp.join(save_folder, osp.basename(color_im_path.replace('png', 'jpg'))), online_im)
+        save_folder = osp.join(output_folder, 'vis')
+        os.makedirs(save_folder, exist_ok=True)
+        cv2.imwrite(osp.join(save_folder, osp.basename(color_im_path.replace('png', 'jpg'))), online_im)
 
         if frame_id % 20 == 0:
             logger.info('Processing frame {} ({:.2f} fps)'.format(frame_id, 1. / max(1e-5, timer.average_time)))
@@ -133,13 +133,12 @@ def detic_demo(args):
         if ch == 27 or ch == ord("q") or ch == ord("Q"):
             break
 
-    if args.save_result:
-        res_file = osp.join(output_folder, "cluster_id_to_instance.pkl")
-        with open(res_file, 'wb') as fp:
-            pickle.dump(cluster_id_to_instance, fp)
-        # with open(res_file, 'w') as f:
-        #     f.writelines(results)
-        # logger.info(f"save results to {res_file}")
+    res_file = osp.join(output_folder, "cluster_id_to_instance.pkl")
+    with open(res_file, 'wb') as fp:
+        pickle.dump(cluster_id_to_instance, fp)
+    # with open(res_file, 'w') as f:
+    #     f.writelines(results)
+    # logger.info(f"save results to {res_file}")
 
 
 def main():
@@ -167,8 +166,11 @@ def main():
     parser.add_argument("--mot20", dest="mot20", default=False, action="store_true", help="test mot20.")
 
     # dataset
+    # parser.add_argument("--dataset", type=str, default=os.path.expanduser("~/dataset/ScanNet/aligned_scans"))
     parser.add_argument("--dataset", type=str, default=os.path.expanduser("~/dataset/CoRL_real"))
-    parser.add_argument("--video", type=str, default="0001")
+    # parser.add_argument("--video", type=str, default="scene0278_00")
+    parser.add_argument("--video", type=str, default="0002")
+    # parser.add_argument("--detic_exp", type=str, default="scan_net-0.3")
     parser.add_argument("--detic_exp", type=str, default="icra23-0.3")
 
     args = parser.parse_args()
